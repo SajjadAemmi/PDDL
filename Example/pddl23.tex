@@ -1,0 +1,87 @@
+\documentclass[12pt,onecolumn,a4paper]{article} 
+\usepackage{epsfig,graphicx,subfigure,amsthm,amsmath}
+\usepackage{color,xcolor}     
+\usepackage{xepersian}
+\settextfont[Scale=1.2]{XB Yas}
+\linespread{1.5}
+\begin{document}
+	\title{پروژه هوش مصنوعی پیشرفته} 
+	\author{
+		دانشگاه فردوسی مشهد\\
+		گروه مهندسی کامپیوتر}
+	\date{\today}
+	\maketitle
+	در اینجا قصد داریم با مثالی ساده، نحوه کدنویسی PDDL و کار با آن را بررسی کنیم. در ابتدا لازم است فایل باینری  blackbox را در مسیر برنامه مورد نظر خود کپی کنید. توجه کنید که این فایل اجرایی 32 بیتی می باشد و اگر شما از کامپیوتر 64 بیتی استفاده می کنید باید ابتدا کتابخانه ای برای اجرای برنامه های 32 بیتی نصب کنید. برای مثال می توانید از دستور زیر استفاده کنید:\\
+	\lr{sudo apt-get install libc6-i386\\}
+	
+	مثالی که در ادامه بررسی خواهیم کرد bulldozer نام دارد. این مساله domain ساده ای دارد که در آن یک فرد می تواند سوار یک وسیله نقلیه شود، آن را به مقصد مشخصی براند، از آن پیاده شود و سپس به مکان دیگر برگردد. مسیرها و پل ها در این domain دو طرفه هستند.
+	همانطور که گفتیم ابتدا فایل blackbox را در پوشه bulldozer کپی میکنیم. سپس از طریق ترمینال وارد پوشه می شویم و دستور زیر را اجرا می کنیم:\\
+	\lr{./blackbox -o domain.pddl -f prob01.pddl\\}
+	دستور blackbox دو فایل با نامهای domain.pddl و  \lr{prob01.pddl} را به عنوان ورودی دریافت می کند.
+	
+	
+	فایل domain.pddl حاوی تعریف دنیای مساله، متغیرها و اعمال است. در این فایل ابتدا domain و نام آن را تعیین می کنیم.  \\
+	
+	\lr{define (domain bulldozer)\\}
+	سپس requirement ها را تعیین میکنیم.  این مشخصه به نوعی تعیین کننده سطح زبان است. در ادامه توضیح هر requirement را مشاهده می کنید.
+	
+	\lr{strips: The most basic subset of PDDL, consisting of STRIPS only.\\}
+	\lr{equality: This requirement means that the domain uses the predicate =, interpreted as equality.\\}
+	سپس predicates را تعریف می کنیم. برای مثال:\\ 
+	\lr{road ?from ?to\\}
+	این predicate مشخص کننده یک جاده و مبدا و مقصد آن است. 
+	حال به بخش مهم تعریف action می رسیم. یک action شامل parameters،precondition و  effect است. برای مثال:
+	 
+	 	\lr{1: (:action Drive\\}
+		\lr{2: :parameters ( ?thing ?from ?to)\\}
+		\lr{3: :precondition (and (road ?from ?to)\\}
+		\lr{4: (at ?thing ?from)\\}
+		\lr{5: (mobile ?thing)\\}
+		\lr{6: (not (= ?from ?to)))\\}
+		\lr{7: :effect (and (at ?thing ?to) (not (at ?thing ?from))))\\}
+	 
+	خط 1 نام action را تعیین می کند. خط 2 پارامترها را تعریف می کند که در اینجا سه پارامتر thing،from و to هستند.  خطوط 3 تا 6 precondition را تعریف می کنند که شامل مجموعه ای از  predicate ها است که پارامترها را به عنوان ورودی دریافت می کنند. همانطور که از خط 6 مشخص است، مبدا و مقصد نباید یکسان باشند. نهایتا در خط  7 effect تعریف می شود که نتیجه اعمال action را نشان می دهد. در اینجا effect مشخص می کند که object جابجا شده باید به مقصد اضافه و از مبدا حذف شده باشد.
+	
+	فایل  \lr{prob01.pddl} شامل یک مساله است. در ابتدا نام مساله و domain آن مشخص میشود.\\
+	\lr{(problem Big-bull1)\\}
+	\lr{(:domain bulldozer)\\}
+ 	سپس objects تعریف می شود که شامل شخص، بولدوزر و نام مکان ها است.\\ 
+ 	\lr{(:objects a b c d e f g jack bulldozer)\\}
+ 	در ادامه حالت اولیه و هدف تعیین می شود. در اینجا Jack ابتدا در مکان a قرار دارد و بولدوزر در مکان e . هدف این است که Jack بولدوزر را به مکان g ببرد و خود به a بازگردد.\\
+ 	\lr{(:goal (and (at bulldozer g) (at jack a)))\\}
+ 	\lr{(:init (at jack a) (at bulldozer e)\\}
+	در نهایت مقادیر پارامترها تعیین می شود که شامل نام فرد، نام وسیله نقلیه و ابتدا و انتهای مسیرها و پل ها است.\\
+	\lr{(vehicle bulldozer)\\
+	(mobile jack)\\
+	(person jack)\\
+	(road a b) (road b a)\\
+	(road a e) (road e a)\\
+	(road e b) (road b e)\\
+	(road a c) (road c a)\\
+	(road c b) (road b c)\\
+	(bridge b d) (bridge d b)\\
+	(bridge c f) (bridge f c)\\
+	(road d f) (road f d)\\
+	(road f g) (road g f)\\
+	(road d g) (road g d))\\}
+در شکل \ref{f1} نقشه مساله را میتوانید مشاهده کنید.
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.7]{prob01.png}
+		\caption{نقشه مساله }
+		\label{f1}
+	\end{figure}
+
+حال برمی گردیم به دستوری که در ترمینال اجرا کردیم. یعنی دستور زیر:\\
+\lr{./blackbox -o domain.pddl -f prob01.pddl\\}
+خروجی این دستور مجموعه action های لازم برای رسیدن به Goal را به ما نشان می دهد (شکل \ref{f2}). 
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.5]{output.png}
+		\caption{خروجی برنامه}
+		\label{f2}
+	\end{figure}
+
+		
+	
+\end{document}
